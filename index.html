@@ -31,7 +31,7 @@
 <script type="text/babel">
 const { useState, useEffect } = React;
 
-// icons
+// icons omitted for brevity — same as before (PlusCircle, Calendar, Award, Trash2)
 const PlusCircle = ({ className }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <circle cx="12" cy="12" r="10"></circle>
@@ -68,7 +68,8 @@ const Trash2 = ({ className }) => (
 function DietCokeTracker() {
     const [entries, setEntries] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [view, setView] = useState('all'); // default to 'all'
+    // <-- FIX: default view set to 'all' so History shows everything by default
+    const [view, setView] = useState('all');
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
         date: new Date().toISOString().slice(0, 10),
@@ -143,7 +144,7 @@ function DietCokeTracker() {
         await saveEntries(newEntries);
     };
 
-    // Data management: export/import/clear
+    // Data management functions (export/import/clear)
     const exportData = () => {
         try {
             const exportPayload = {
@@ -236,7 +237,7 @@ function DietCokeTracker() {
         }
     };
 
-    // Stats and helpers
+    // Stats / formatting helpers (unchanged)
     const getStats = () => {
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -309,7 +310,7 @@ function DietCokeTracker() {
                 }
                 return b.count - a.count;
             })
-            .slice(0, 5); // <-- changed to top 5
+            .slice(0, 5);
 
         const dayStats = entries.reduce((acc, entry) => {
             const date = new Date(entry.timestamp);
@@ -823,7 +824,31 @@ function DietCokeTracker() {
                     )}
                 </div>
 
-                {/* TOP LOCATIONS (moved above Most Caffeinated Days) */}
+                {stats.topCaffeineDays.length > 0 && (
+                    <div className="bg-white rounded-xl p-4 shadow">
+                        <h3 className="font-semibold text-gray-800 mb-3">Most Caffeinated Days</h3>
+                        <div className="space-y-2">
+                            {stats.topCaffeineDays.map((day, index) => (
+                                <div key={day.date} className="flex items-center gap-3 p-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+                                    <div className="flex-shrink-0 w-6 text-center font-bold text-purple-400 text-sm">
+                                        #{index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-gray-800">{formatFullDate(day.date)}</div>
+                                        <div className="text-xs text-gray-500">
+                                            {day.count} {day.count === 1 ? 'drink' : 'drinks'} • {day.ounces.toFixed(1)} oz
+                                        </div>
+                                    </div>
+                                    <div className="flex-shrink-0 text-right">
+                                        <div className="text-lg font-bold text-purple-600">{day.caffeine.toFixed(0)}</div>
+                                        <div className="text-xs text-purple-500 font-semibold">mg</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {stats.topLocations.length > 0 && (
                     <div className="bg-white rounded-xl p-4 shadow">
                         <h3 className="font-semibold text-gray-800 mb-3">Top Locations</h3>
@@ -845,31 +870,6 @@ function DietCokeTracker() {
                                         {loc.ounces > 0 && (
                                             <div className="text-xs text-blue-600 font-semibold">{loc.ounces.toFixed(0)} oz</div>
                                         )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {stats.topCaffeineDays.length > 0 && (
-                    <div className="bg-white rounded-xl p-4 shadow">
-                        <h3 className="font-semibold text-gray-800 mb-3">Most Caffeinated Days</h3>
-                        <div className="space-y-2">
-                            {stats.topCaffeineDays.map((day, index) => (
-                                <div key={day.date} className="flex items-center gap-3 p-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
-                                    <div className="flex-shrink-0 w-6 text-center font-bold text-purple-400 text-sm">
-                                        #{index + 1}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-medium text-gray-800">{formatFullDate(day.date)}</div>
-                                        <div className="text-xs text-gray-500">
-                                            {day.count} {day.count === 1 ? 'drink' : 'drinks'} • {day.ounces.toFixed(1)} oz
-                                        </div>
-                                    </div>
-                                    <div className="flex-shrink-0 text-right">
-                                        <div className="text-lg font-bold text-purple-600">{day.caffeine.toFixed(0)}</div>
-                                        <div className="text-xs text-purple-500 font-semibold">mg</div>
                                     </div>
                                 </div>
                             ))}
@@ -930,11 +930,49 @@ function DietCokeTracker() {
                 )}
             </div>
 
+            {/* Data Management */}
+            <div className="px-6 mt-6">
+                <div className="bg-white rounded-xl p-4 shadow">
+                    <h3 className="font-semibold text-gray-800 mb-3">Data Management</h3>
+
+                    <div className="space-y-3">
+                        <button
+                            onClick={exportData}
+                            className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                        >
+                            Export Backup ({entries.length} {entries.length === 1 ? 'entry' : 'entries'})
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                const el = document.getElementById("importFile");
+                                if (el) el.click();
+                            }}
+                            className="w-full py-2 px-4 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                        >
+                            Import Backup
+                        </button>
+
+                        <button
+                            onClick={clearAllData}
+                            className="w-full py-2 px-4 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                        >
+                            Clear All Data
+                        </button>
+
+                        <div className="text-xs text-gray-500">
+                            Tip: Export regularly and store the JSON file somewhere safe (email, cloud drive).
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="px-6 mt-6">
                 <div className="bg-white rounded-xl shadow overflow-hidden">
                     <div className="p-4 border-b border-gray-100 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-red-600" />
                         <h2 className="font-semibold text-gray-800">History</h2>
+                        {/* <-- HEADLINE UPDATED: show shown/total counts */}
                         <span className="text-sm text-gray-500 ml-auto">
                             Showing {filteredEntries.length} of {entries.length} entries
                         </span>
